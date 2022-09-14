@@ -1,90 +1,83 @@
 package main;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.Iterator;
-import java.util.Scanner;
+import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.scene.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.stage.Stage;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+public class Main extends Application {
 
-import javax.swing.*;
-
-public class Main {
-	static String word = "";
-	static int i = 1;
-	@SuppressWarnings("unchecked")
-	public static void main (String[] args) {
+	@Override
+	public void start(Stage stage) {
+		stage.setTitle("Dictionary");
+		stage.setScene(new Scene(createContent(), 1366, 768));
+		stage.show();
+	}
+	
+	private Parent createContent() {
 		
 		
-		try (Scanner scnObj = new Scanner(System.in)) {
-			System.out.print("Enter word to search meaning for: ");
-			word = scnObj.next();
-			HttpRequest request = HttpRequest.newBuilder()
-					.uri(URI.create("https://api.dictionaryapi.dev/api/v2/entries/en/" + word))
-					.method("GET", HttpRequest.BodyPublishers.noBody())
-					.build();
-			HttpResponse<String> response;
-			try {
-				response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-				//System.out.println("{ \"response\": " + response.body() + "}");
-				try {
-					Object obj = new JSONParser().parse("{ \"response\": " + response.body() + "}");
-					JSONObject jo = (JSONObject) obj;
-					JSONArray ja = (JSONArray) jo.get("response");
-//					ja.forEach(item -> {
-//						JSONObject subobj = (JSONObject) item;
-//						System.out.println("requested word: " + subobj.get("word"));
-//						System.out.println("phonetic: " + subobj.get("phonetic"));
-//						JSONArray meaningArr = (JSONArray) subobj.get("meanings");
-//						meaningArr.forEach(meanArrItem -> {
-//							JSONObject meaningObj = (JSONObject) meanArrItem;
-//							System.out.println("Type: " + meaningObj.get("partOfSpeech"));
-//						});
-//					});
-					Object tarObj = ja.get(0);
-					JSONObject subobj = (JSONObject) tarObj;
-					System.out.println("requested word: " + subobj.get("word"));
-					System.out.println("phonetic: " + subobj.get("phonetic"));
-					JSONArray meaningArr = (JSONArray) subobj.get("meanings");
-					JSONObject meaningArrItem = (JSONObject) meaningArr.get(0);
-					JSONObject meaningObj = (JSONObject) meaningArrItem;
-					System.out.println("Type: " + meaningObj.get("partOfSpeech"));
-					System.out.println("Definations:");
-					JSONArray defArr = (JSONArray) meaningObj.get("definitions");
-					defArr.forEach(item -> {
-						JSONObject defObj = (JSONObject) item;
-						System.out.println("\t"+ i + "." + defObj.get("definition") + "\n");
-						i++;
-					});
-					i = 1;
-					JSONArray synarr = (JSONArray) meaningObj.get("synonyms");
-					System.out.print("Synonyms: ");
-					synarr.forEach(item -> {
-						if(i%5 == 0) {
-							System.out.print("\n\t");
-						}
-						System.out.print(item + ", ");
-						i++;
-					});
-					
-				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+		TextField inputField = new TextField();
+		inputField.setPrefWidth(250);	
+		
+		Text enterPrompt = new Text("Enter a word to search for: ");
+		enterPrompt.setFont(new Font(16));
+		
+		Button submitBtn = new Button("Submit");
+		submitBtn.setFont(new Font(12));
+		
+		HBox inputRow = new HBox();
+		inputRow.setSpacing(10);
+		inputRow.setPadding(new Insets(20));
+		
+		inputRow.getChildren().addAll( enterPrompt, inputField, submitBtn);
+		
+		VBox outputCol = new VBox();
+		outputCol.setPadding(new Insets(20));
+		Text word = new Text("");
+		word.setFont(new Font(16));
+		Text type = new Text("");
+		type.setFont(new Font(16));
+		Text phonetic = new Text("");
+		phonetic.setFont(new Font(16));
+		Text definition = new Text("");
+		definition.setFont(new Font(16));
+		Text synonyms = new Text("");
+		synonyms.setFont(new Font(16));
+		outputCol.getChildren().addAll(word,type,phonetic,definition, synonyms);
+		
+		
+		VBox root = new VBox();
+		
+		root.getChildren().addAll(inputRow, outputCol);
+		
+		EventHandler<ActionEvent> event = new EventHandler<ActionEvent> () {
+
+			@Override
+			public void handle(ActionEvent e) {
+				SearchMeaning results = new SearchMeaning(inputField.getText());
+				word.setText("Word given: " + results.word);
+				type.setText("Type: " +results.type);
+				phonetic.setText("Phonetic: " + results.phonetic);
+				definition.setText("Definitions: \n\t\t" + results.definitions);
+				synonyms.setText("Synonyms: \n" + results.synonyms);
 			}
-		}
-		
-		
+			
+		};
+		submitBtn.setOnAction(event);
+		return root;
+	}
+	
+
+	public static void main(String[] args) {
+		launch(args);
 	}
 }

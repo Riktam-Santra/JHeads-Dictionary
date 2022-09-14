@@ -6,6 +6,7 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JavaFX19"/>
 	<classpathentry kind="lib" path="C:/Users/Rick/Desktop/sit-training/json-simple-1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
